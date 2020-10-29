@@ -4,6 +4,9 @@ Freebsd rootkit
 # Tested on
 Freebsd 12.1-RELEASE
 
+# Why another freebsd rootkit
+Well, the rootkits out ther are outdated and they do they same thing(syshook hooking). that's good but I wanted to take it further. Reptile has been a big influence on this rootkit mainly the file tampering feature. Now it's on Freebsd
+
 
 # Features
 * Hide files and directories
